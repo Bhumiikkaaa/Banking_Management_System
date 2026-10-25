@@ -1,5 +1,10 @@
-   server
-   client
-   test_recovery
-   data/
-   testdata_*/
+# Compiled executables
+/server
+/client
+/test_recovery
+
+# Runtime banking data and logs
+/data/
+
+# Test-generated data
+/testdata_*/
