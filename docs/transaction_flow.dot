@@ -1,0 +1,14 @@
+digraph flow {
+  rankdir=TB; fontname="Helvetica"; nodesep=0.3; ranksep=0.35;
+  node [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", fillcolor="#f4f6fb", color="#4a5a7a", width=4.6];
+  edge [color="#4a5a7a"];
+  labelloc=t; label="How one money transfer stays ACID (apply_legs in store.c)"; fontsize=15;
+  s1 [label="1. Write-lock both account records (fcntl F_WRLCK)\nalways lowest account number first  ->  no deadlock    [ISOLATION]"];
+  s2 [label="2. Read both records, check: active? enough balance?\nrefuse before changing anything                         [CONSISTENCY]", fillcolor="#e3f4e8"];
+  s3 [label="3. Write intended result (after-images) to journal.dat + fsync\nthe commit point                                          [ATOMICITY]", fillcolor="#fff4d6"];
+  s4 [label="4. Copy after-images to accounts.dat and txns.dat + fsync\n                                                           [DURABILITY]", fillcolor="#ffe9e9"];
+  s5 [label="5. Mark journal finished + fsync, release locks"];
+  crash [label="Crash after step 3?\nOn restart store_recover() repeats step 4 (safe to repeat)", shape=box, style="rounded,dashed", fillcolor="#ffffff", color="#c0392b", fontcolor="#c0392b"];
+  s1->s2->s3->s4->s5;
+  s3->crash [style=dashed, color="#c0392b"];
+}

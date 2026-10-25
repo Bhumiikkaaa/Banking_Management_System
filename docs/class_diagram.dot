@@ -1,0 +1,27 @@
+digraph classes {
+  rankdir=LR; fontname="Helvetica"; nodesep=0.4; ranksep=0.7;
+  node [fontname="Helvetica", fontsize=10, shape=record, style=filled, fillcolor="#f4f6fb", color="#4a5a7a"];
+  edge [fontname="Helvetica", fontsize=9, color="#4a5a7a"];
+  labelloc=t; label="Class / record diagram"; fontsize=15;
+
+  User   [label="{User|+ id : int\l+ username : char[24]\l+ pass_hash : char[20]\l+ role : int (1-4)\l+ active : int\l}"];
+  Account[label="{Account|+ acc_no : int\l+ owner_id : int\l+ joint_id : int\l+ active : int\l+ balance : money (paise)\l}"];
+  Txn    [label="{Txn|+ txn_id : int\l+ acc_no : int\l+ user_id : int\l+ type : char[16]\l+ amount : money\l+ balance_after : money\l+ when : time_t\l}"];
+  Loan   [label="{Loan|+ loan_id : int\l+ acc_no : int\l+ amount : money\l+ status : pending/assigned/\l   approved/rejected\l+ employee_id : int\l+ applied : time_t\l}"];
+  Feedback[label="{Feedback|+ id : int\l+ user_id : int\l+ text : char[120]\l+ reviewed : int\l}"];
+  Journal[label="{Journal (write-ahead log)|+ state : 1 = in progress\l+ n : int\l+ after[2] : Account\l+ txn[2] : Txn\l+ loan : Loan (optional)\l}", fillcolor="#fff4d6"];
+
+  Customer [label="{Customer module|balance, deposit, withdraw,\ltransfer, details, statement,\lapply loan, loan status,\lchange password, feedback\l}", fillcolor="#e3f4e8"];
+  Employee [label="{Employee module|add customer, modify customer,\lsearch account, my loans,\lapprove/reject loan\l}", fillcolor="#e3f4e8"];
+  Manager  [label="{Manager module|activate/deactivate account,\lopen loans, assign loan,\lreview feedback\l}", fillcolor="#e3f4e8"];
+  Admin    [label="{Administrator module|add / delete / modify user,\lsearch account, list users\l}", fillcolor="#e3f4e8"];
+  Store    [label="{store.c (storage layer)|apply_legs()  - atomic money move\lloan_decide() - loan + credit together\lstore_recover()\lsession_enter()/leave()\l}", fillcolor="#ffe9e9"];
+
+  User -> Account [label="owner / joint\n1 .. 2 users : 1 account", arrowhead=none];
+  Account -> Txn [label="1 : many", arrowhead=none];
+  Account -> Loan [label="1 : many", arrowhead=none];
+  User -> Feedback [label="1 : many", arrowhead=none];
+  Store -> Journal [label="writes first", style=dashed];
+  Customer -> Store; Employee -> Store; Manager -> Store; Admin -> Store;
+  Store -> Account [style=dotted]; Store -> User [style=dotted];
+}

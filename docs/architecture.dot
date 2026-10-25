@@ -1,0 +1,35 @@
+digraph arch {
+  rankdir=TB; fontname="Helvetica"; nodesep=0.35; ranksep=0.55;
+  node [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", fillcolor="#f4f6fb", color="#4a5a7a"];
+  edge [fontname="Helvetica", fontsize=9, color="#4a5a7a"];
+  labelloc=t; label="Architecture - Online Banking Management System"; fontsize=15;
+
+  subgraph cluster_clients { label="Clients (terminal, one per user)"; style="rounded,dashed"; color="#999999";
+    c1 [label="Customer\n(normal / joint)"]; c2 [label="Bank Employee"]; c3 [label="Manager"]; c4 [label="Administrator"]; }
+
+  subgraph cluster_server { label="Server machine"; style="rounded"; color="#4a5a7a"; fillcolor="#ffffff";
+    parent [label="server (parent process)\naccept() loop - fork() per client\nSIGCHLD handler reaps children", fillcolor="#fff4d6"];
+    logger [label="logger thread (pthread)\nreads pipe, writes server.log", fillcolor="#fff4d6"];
+
+    subgraph cluster_child { label="child process - one per connected client"; style="rounded,dashed"; color="#888888";
+      auth [label="login + session check\n(3 wrong tries -> disconnect)"];
+      menus [label="role modules\ncustomer.c  employee.c\nmanager.c  admin.c", fillcolor="#e3f4e8"];
+      store [label="store.c - storage layer\nfcntl record locks, journal,\nfsync, recovery", fillcolor="#e3f4e8"];
+      auth -> menus -> store;
+    }
+
+    subgraph cluster_files { label="data/ (plain binary files, no database)"; style="rounded"; color="#4a5a7a";
+      f1 [label="users.dat\naccounts.dat", shape=cylinder, fillcolor="#ffe9e9"];
+      f2 [label="txns.dat\nloans.dat\nfeedback.dat", shape=cylinder, fillcolor="#ffe9e9"];
+      f3 [label="journal.dat\n(write-ahead log)", shape=cylinder, fillcolor="#ffe9e9"];
+      f4 [label="sessions.lock\n(one login per user)", shape=cylinder, fillcolor="#ffe9e9"];
+      f5 [label="server.log", shape=note, fillcolor="#ffffff"];
+    }
+  }
+
+  c1 -> parent [label="TCP socket\nport 8090"]; c2 -> parent; c3 -> parent; c4 -> parent;
+  parent -> auth [label="fork()"];
+  store -> f1 [label="pread/pwrite\nread/write locks"]; store -> f2; store -> f3 [label="log before write"]; store -> f4 [label="byte-range lock"];
+  menus -> logger [label="pipe (IPC)\nlog lines", style=dashed, constraint=false];
+  logger -> f5;
+}
